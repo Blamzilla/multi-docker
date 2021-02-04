@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+
+services:
+  - docker
+before_install:
+  - echo Logging in to Docker Hub...
+  - echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
+  - docker build -t blamzilla/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run -e CI=true blamzilla/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t blamzilla/multi-client ./client
+  - docker build -t blamzilla/multi-nginx ./nginx
+  - docker build -t blamzilla/multi-server ./server
+  - docker build -t blamzilla/multi-worker ./worker
+  - docker push blamzilla/multi-client
+  - docker push blamzilla/multi-nginx
+  - docker push blamzilla/multi-server
+  - docker push blamzilla/multi-worker
